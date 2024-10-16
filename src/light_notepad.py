@@ -103,6 +103,7 @@ def set_txt(filename: str="test.txt"):
         read_file.close()
 
 def save(information: str="Text....", fn: str="test.txt"):
+    global IS_FILE_SAVED
     if fn == '':
         mbox.showerror("Cannot save.", "Error code: 3\n\nFilename is empty. Either use save as or make a new document.")
         return 1
@@ -112,6 +113,7 @@ def save(information: str="Text....", fn: str="test.txt"):
         mbox.showerror("Error: FileNotFoundError", f"Error message: {fnfe}.\n\n Please recheck that the file is there")
     txt_saved.writelines(information)
     txt_saved.close()
+    IS_FILE_SAVED = True
     mbox.showinfo("Successfully saved", "Successfully saved to " + fn)
 
 print(f"Version: {VERSION}")
@@ -181,8 +183,8 @@ help_menu.add_cascade(label="Solve errors!", command=lambda: webbrowser.open("ht
 help_menu.add_separator()
 help_menu.add_cascade(label="About Light Notepad", command=lambda: mbox.showinfo("Light Notepad - Created by Mithun", ABOUT_TXT))
 
-txt_box = ctk.CTkTextbox(app)
-txt_box.pack()
+txt_box = ctk.CTkTextbox(app, width=600, height=600)
+txt_box.pack(expand=True, fill='both')
 txt_box.place(relx=0.5, rely=0.5, anchor=CENTER)
 
 app.mainloop()
