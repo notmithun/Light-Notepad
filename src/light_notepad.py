@@ -21,7 +21,7 @@ import webbrowser
 # Delcaring variables
 
 # The version of the app.
-VERSION: float = 1.0
+VERSION: float = 1.1
 
 # In Unix-based systems, the cls command will be clear.
 # In NT based systems, the clear command will be cls
@@ -36,16 +36,15 @@ Written in - Python (3.11.5)
 """
 
 # This text will be shown in start of the app. Can be disabled in "config.json". Set the "start_up_txt" to false
-START_UP_TXT: str = f""""
-Version : {VERSION}
-Python and system version : {sys.version}
+START_UP_TXT: str = f"""
+Version : {VERSION} \n
+Python and system version : {sys.version} \n
 Made by Mithun
 """
 CENTER: str = ctk.CENTER
 
-IS_FILE_OPENED: bool = False
 
-IS_FILE_SAVED: bool = False
+IS_FILE_SAVED: bool = True
 
 global filename
 
@@ -65,20 +64,18 @@ elif platform == "win32":
 # Functions to be used in buttons or other things
 
 def new():
-    global IS_FILE_OPENED, IS_FILE_SAVED, filename
-    if IS_FILE_OPENED:
-        temp = mbox.askyesnocancel("Save", "Do you want to save the file?")
+    global IS_FILE_SAVED, filename
+    if IS_FILE_SAVED:
+        temp = mbox.askyesnocancel("Waring: File not saved", "Do you want to save the file?")
         if temp:
             save(txt_box.get(0.0, "end"), save_file_dialog())
             txt_box.delete(0.0, "end")
             filename = ""
             IS_FILE_SAVED = False
-            IS_FILE_OPENED = False
         elif temp == None:
             pass
         else:
             txt_box.delete(0.0, "end")
-            IS_FILE_OPENED = False
             IS_FILE_SAVED = False
             filename = ""
     else:
@@ -86,10 +83,24 @@ def new():
 
 def open_file():
     global filename
-    global IS_FILE_OPENED
-    IS_FILE_OPENED = True
+    global IS_FILE_SAVED
+    if not IS_FILE_SAVED:
+        temp = mbox.askyesnocancel("Warning: File not saved", "Do you want to save your file?")
+        if temp:
+            save(txt_box.get(0.0, "end"), save_file_dialog())
+            txt_box.delete(0.0, "end")
+            filename = ""
+            IS_FILE_SAVED = False
+        elif temp == None:
+            return ''
+        elif not temp:
+            pass
+    IS_FILE_SAVED = False
     fn = fd.askopenfilename(defaultextension="*.txt, *.log")
-    filename = fn
+    if fn.endswith(".iso") or fn.endswith(".img"):
+        mbox.showerror("Error", "Error code: 5\n\n Light Notepad cannot read '.iso' / '.img' files")
+        fn = ''
+    filename = fn 
     return fn
 
 def save_file_dialog():
@@ -97,9 +108,17 @@ def save_file_dialog():
     return svd
 
 def set_txt(filename: str="test.txt"):
+    if filename == '':
+        mbox.showerror("Cannot save.", "Error code: 3\n\nFilename is empty. Either use save as or make a new document.")
+        return 1
     txt_box.delete(0.0, "end")
     with open (filename, 'r') as read_file:
-        txt_box.insert(index=0.0, text=read_file.read())
+        try:
+            txt_box.insert(index=0.0, text=read_file.read())
+        except UnicodeDecodeError as e:
+            mbox.showerror("Error: UnicodeDecodeError", f"Error message: {e}. \n\nError code: 4\n\nThat file you tried to open is not a valid text file.")
+        except FileNotFoundError as fe:
+            print(f"FileNotFoundError: {fe}")
         read_file.close()
 
 def save(information: str="Text....", fn: str="test.txt"):
